@@ -56,7 +56,8 @@ const GHOST_STARTS = [
   { x: 14, y: 14, kind: 'chaser' },                    // Pinky: perseguidor parcial
   { x: 12, y: 14, kind: 'patrol' },                    // Inky: patrullero
   { x: 13, y: 13, kind: 'scatter' },                   // Sue: dispersor de esquinas
-  { x: 13.5, y: 14, kind: 'hunter', speed: 0.05 }     // Clyde: cazador lento
+  { x: 13.5, y: 14, kind: 'hunter', speed: 0.05 },    // Clyde: cazador lento
+  { x: 15, y: 14, kind: 'mimic' }                     // Sexto fantasma: imita a Pacman
 ];
 
 // Puntos de patrulla para el fantasma tipo 'patrol'
@@ -73,7 +74,8 @@ const SCATTER_CORNERS = [
   { x: 26, y: 1 },    // fantasma 1 (chaser) -> arriba-derecha
   { x: 26, y: 29 },   // fantasma 2 (patrol) -> abajo-derecha
   { x: 1,  y: 29 },   // fantasma 3 (scatter) -> abajo-izquierda
-  { x: 1,  y: 1 }     // fantasma 4 (clyde/hunter lento) -> arriba-izquierda
+  { x: 1,  y: 1 },    // fantasma 4 (clyde/hunter lento) -> arriba-izquierda
+  { x: 26, y: 29 }   // fantasma 5 (mimic) -> abajo-derecha
 ];
 
 window.MAZE = MAZE;

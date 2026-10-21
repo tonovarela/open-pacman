@@ -184,6 +184,29 @@ function decideScatter( game, g, choices ) {
   return best;
 }
 
+// Estrategia Mimic: persigue la posicion retrasada de Pacman.
+// Objetivo = tile de Pacman + 2 celdas en su direccion de avance.
+function decideMimic( game, g, choices ) {
+  const px = Math.round( game.pacman.x );
+  const py = Math.round( game.pacman.y );
+  const dir = DIRS[ game.pacman.dir ] || { x: 0, y: 0 };
+  const tx = px + dir.x * 2;
+  const ty = py + dir.y * 2;
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  return best;
+}
+
 // Decide la siguiente dirección según el tipo de fantasma
 function decideGhost( game, g ) {
   const grid = game.grid;
@@ -207,6 +230,9 @@ function decideGhost( game, g ) {
       break;
     case 'scatter':
       newDir = decideScatter( game, g, choices );
+      break;
+    case 'mimic':
+      newDir = decideMimic( game, g, choices );
       break;
     default:
       // Fallback: aleatorio

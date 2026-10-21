@@ -40,7 +40,7 @@ function createGame() {
       x: g.x,
       y: g.y,
       dir: 'up',
-      speed: GHOST_SPEED,
+      speed: g.speed || GHOST_SPEED,      // Permite override de velocidad
       kind: g.kind,
       patrolIndex: 0,                    // Para fantasmas tipo 'patrol'
       homeCorner: SCATTER_CORNERS[ i ],  // Para fantasmas tipo 'scatter'

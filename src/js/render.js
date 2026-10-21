@@ -144,7 +144,8 @@ function drawHUD( ctx, game, W ) {
   ctx.fillText( 'VIDAS ' + game.lives, W * TILE - 8, 4 );
 }
 
-const GHOST_COLORS = [ '#ff0000', '#00ffff', '#ffb8ff', '#ffb852' ];
+const GHOST_COLORS = [ '#ff0000', '#00ffff', '#ffb8ff', '#ffb852', '#cc6600' ];
+// Rojo (Hunter), Cyan (Chaser), Magenta (Patrol), Naranja (Scatter), Naranja oscuro (Clyde/Hunter lento)
 
 function draw( ctx, game, frame ) {
   const grid = game.grid;

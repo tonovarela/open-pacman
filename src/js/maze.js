@@ -52,11 +52,31 @@ const MAZE = MAZE_STR.map( ( row ) => row.split( '' ).map( parseTile ) );
 const TUNNEL_ROW = 14;
 const PACMAN_START = { x: 13, y: 23 };
 const GHOST_STARTS = [
-  { x: 13, y: 14, kind: 'hunter' }, // dentro de la pen
-  { x: 14, y: 14, kind: 'random' }, // dentro de la pen
+  { x: 13, y: 14, kind: 'hunter' },   // Blinky: cazador agresivo
+  { x: 14, y: 14, kind: 'chaser' },   // Pinky: perseguidor parcial
+  { x: 12, y: 14, kind: 'patrol' },   // Inky: patrullero
+  { x: 13, y: 13, kind: 'scatter' }   // Sue: dispersor de esquinas
+];
+
+// Puntos de patrulla para el fantasma tipo 'patrol'
+const PATROL_POINTS = [
+  { x: 1,  y: 1 },    // arriba-izquierda
+  { x: 26, y: 1 },    // arriba-derecha
+  { x: 26, y: 29 },   // abajo-derecha
+  { x: 1,  y: 29 }    // abajo-izquierda
+];
+
+// Esquinas de dispersión asignadas por índice de fantasma
+const SCATTER_CORNERS = [
+  { x: 1,  y: 1 },    // fantasma 0 (hunter) -> arriba-izquierda
+  { x: 26, y: 1 },    // fantasma 1 (chaser) -> arriba-derecha
+  { x: 26, y: 29 },   // fantasma 2 (patrol) -> abajo-derecha
+  { x: 1,  y: 29 }    // fantasma 3 (scatter) -> abajo-izquierda
 ];
 
 window.MAZE = MAZE;
 window.TUNNEL_ROW = TUNNEL_ROW;
 window.PACMAN_START = PACMAN_START;
 window.GHOST_STARTS = GHOST_STARTS;
+window.PATROL_POINTS = PATROL_POINTS;
+window.SCATTER_CORNERS = SCATTER_CORNERS;

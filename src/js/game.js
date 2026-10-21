@@ -36,12 +36,14 @@ function createGame() {
       nextDir: null,
       speed: PACMAN_SPEED,
     },
-    ghosts: GHOST_STARTS.map( ( g ) => ( {
+    ghosts: GHOST_STARTS.map( ( g, i ) => ( {
       x: g.x,
       y: g.y,
       dir: 'up',
       speed: GHOST_SPEED,
       kind: g.kind,
+      patrolIndex: 0,                    // Para fantasmas tipo 'patrol'
+      homeCorner: SCATTER_CORNERS[ i ],  // Para fantasmas tipo 'scatter'
     } ) ),
   };
 }
@@ -110,9 +112,81 @@ function movePacman( game ) {
   wrapTunnel( p, width );
 }
 
+// Estrategia Hunter: persigue agresivamente a Pacman minimizando distancia Manhattan
+function decideHunter( game, g, choices ) {
+  const px = Math.round( game.pacman.x );
+  const py = Math.round( game.pacman.y );
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - px ) + Math.abs( ny - py );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  return best;
+}
+
+// Estrategia Chaser: 70% persecución (Hunter), 30% aleatorio
+function decideChaser( game, g, choices ) {
+  if ( Math.random() < 0.7 ) {
+    // Modo cazador: igual que Hunter
+    return decideHunter( game, g, choices );
+  } else {
+    // Modo aleatorio
+    return choices[ Math.floor( Math.random() * choices.length ) ];
+  }
+}
+
+// Estrategia Patrol: sigue ruta cíclica de 4 esquinas
+function decidePatrol( game, g, choices ) {
+  const punto = PATROL_POINTS[ g.patrolIndex ];
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - punto.x ) + Math.abs( ny - punto.y );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  
+  // Si llegó cerca del punto actual, avanzar al siguiente
+  if ( Math.abs( g.x - punto.x ) + Math.abs( g.y - punto.y ) < 1.5 ) {
+    g.patrolIndex = ( g.patrolIndex + 1 ) % PATROL_POINTS.length;
+  }
+  
+  return best;
+}
+
+// Estrategia Scatter: va hacia su esquina asignada
+function decideScatter( game, g, choices ) {
+  const esquina = g.homeCorner;
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - esquina.x ) + Math.abs( ny - esquina.y );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  return best;
+}
+
+// Decide la siguiente dirección según el tipo de fantasma
 function decideGhost( game, g ) {
   const grid = game.grid;
-  const p = game.pacman;
 
   const options = Object.keys( DIRS ).filter(
     ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
@@ -120,25 +194,26 @@ function decideGhost( game, g ) {
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
-  if ( g.kind === 'hunter' ) {
-    const px = Math.round( p.x );
-    const py = Math.round( p.y );
-    let best = choices[ 0 ];
-    let bestDist = Infinity;
-    for ( const dir of choices ) {
-      const d = DIRS[ dir ];
-      const nx = g.x + d.x;
-      const ny = g.y + d.y;
-      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
-      if ( dist < bestDist ) {
-        bestDist = dist;
-        best = dir;
-      }
-    }
-    g.dir = best;
-  } else {
-    g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
+  let newDir;
+  switch ( g.kind ) {
+    case 'hunter':
+      newDir = decideHunter( game, g, choices );
+      break;
+    case 'chaser':
+      newDir = decideChaser( game, g, choices );
+      break;
+    case 'patrol':
+      newDir = decidePatrol( game, g, choices );
+      break;
+    case 'scatter':
+      newDir = decideScatter( game, g, choices );
+      break;
+    default:
+      // Fallback: aleatorio
+      newDir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
+  
+  g.dir = newDir;
 }
 
 function moveGhost( game, g ) {

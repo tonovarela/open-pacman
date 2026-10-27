@@ -44,6 +44,8 @@ function createGame() {
       kind: g.kind,
       patrolIndex: 0,                    // Para fantasmas tipo 'patrol'
       homeCorner: SCATTER_CORNERS[ i ],  // Para fantasmas tipo 'scatter'
+      inPen: true,                       // Comienza dentro de la pen
+      penFrameCount: 0,                  // Contador de frames en la pen
     } ) ),
   };
 }
@@ -184,6 +186,25 @@ function decideScatter( game, g, choices ) {
   return best;
 }
 
+// Estrategia para fantasmas dentro de la pen: perseguir la puerta de salida
+function decideGhostInPen( game, g, choices ) {
+  const exitX = PEN_EXIT.x;
+  const exitY = PEN_EXIT.y;
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - exitX ) + Math.abs( ny - exitY );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  return best;
+}
+
 // Decide la siguiente dirección según el tipo de fantasma
 function decideGhost( game, g ) {
   const grid = game.grid;
@@ -195,22 +216,28 @@ function decideGhost( game, g ) {
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
   let newDir;
-  switch ( g.kind ) {
-    case 'hunter':
-      newDir = decideHunter( game, g, choices );
-      break;
-    case 'chaser':
-      newDir = decideChaser( game, g, choices );
-      break;
-    case 'patrol':
-      newDir = decidePatrol( game, g, choices );
-      break;
-    case 'scatter':
-      newDir = decideScatter( game, g, choices );
-      break;
-    default:
-      // Fallback: aleatorio
-      newDir = choices[ Math.floor( Math.random() * choices.length ) ];
+  
+  // Si el fantasma está en la pen, usar estrategia de escape
+  if ( g.inPen ) {
+    newDir = decideGhostInPen( game, g, choices );
+  } else {
+    switch ( g.kind ) {
+      case 'hunter':
+        newDir = decideHunter( game, g, choices );
+        break;
+      case 'chaser':
+        newDir = decideChaser( game, g, choices );
+        break;
+      case 'patrol':
+        newDir = decidePatrol( game, g, choices );
+        break;
+      case 'scatter':
+        newDir = decideScatter( game, g, choices );
+        break;
+      default:
+        // Fallback: aleatorio
+        newDir = choices[ Math.floor( Math.random() * choices.length ) ];
+    }
   }
   
   g.dir = newDir;
@@ -223,6 +250,17 @@ function moveGhost( game, g ) {
   if ( aligned( g.x ) && aligned( g.y ) ) {
     g.x = Math.round( g.x );
     g.y = Math.round( g.y );
+    
+    // Si está en la pen, incrementar contador y decidir si ya debe salir
+    if ( g.inPen ) {
+      g.penFrameCount++;
+      const ghostIndex = game.ghosts.indexOf( g );
+      if ( ghostIndex >= 0 && g.penFrameCount >= PEN_RELEASE_TIMES[ ghostIndex ] ) {
+        g.inPen = false;
+        g.penFrameCount = 0;
+      }
+    }
+    
     decideGhost( game, g );
     if ( !canMove( grid, g.x, g.y, g.dir, 'ghost' ) ) return;
   }

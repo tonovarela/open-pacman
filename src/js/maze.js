@@ -78,9 +78,23 @@ const SCATTER_CORNERS = [
   { x: 26, y: 29 }   // fantasma 5 (mimic) -> abajo-derecha
 ];
 
+// Pen (jaula de partida) — constantes para salida de fantasmas
+const PEN_BOUNDS = { x0: 11, x1: 15, y0: 12, y1: 16 };  // Área de la jaula
+const PEN_EXIT = { x: 13, y: 11 };                        // Puerta de salida (arriba de la pen)
+const PEN_RELEASE_TIMES = [
+  30,   // Blinky (hunter):   ~0.5 seg a 60fps
+  120,  // Pinky (chaser):    ~2 seg
+  180,  // Inky (patrol):     ~3 seg
+  250,  // Sue (scatter):     ~4 seg
+  300   // Clyde (lento):     ~5 seg
+];
+
 window.MAZE = MAZE;
 window.TUNNEL_ROW = TUNNEL_ROW;
 window.PACMAN_START = PACMAN_START;
 window.GHOST_STARTS = GHOST_STARTS;
 window.PATROL_POINTS = PATROL_POINTS;
 window.SCATTER_CORNERS = SCATTER_CORNERS;
+window.PEN_BOUNDS = PEN_BOUNDS;
+window.PEN_EXIT = PEN_EXIT;
+window.PEN_RELEASE_TIMES = PEN_RELEASE_TIMES;

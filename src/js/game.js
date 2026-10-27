@@ -29,6 +29,8 @@ function createGame() {
     lives: 3,
     dotsRemaining: dots,
     grid,
+    frightMode: false,           // Modo miedo activado
+    frightFrameCount: 0,         // Contador de frames en modo miedo
     pacman: {
       x: PACMAN_START.x,
       y: PACMAN_START.y,
@@ -46,6 +48,8 @@ function createGame() {
       homeCorner: SCATTER_CORNERS[ i ],  // Para fantasmas tipo 'scatter'
       inPen: true,                       // Comienza dentro de la pen
       penFrameCount: 0,                  // Contador de frames en la pen
+      frightened: false,                 // Está asustado
+      eatenThisRound: false,             // Fue comido en esta ronda de miedo
     } ) ),
   };
 }
@@ -103,6 +107,18 @@ function movePacman( game ) {
       grid[ p.y ][ p.x ] = 0;
       game.score += 10;
       game.dotsRemaining--;
+    }
+    // Comer Power Pellet.
+    if ( grid[ p.y ][ p.x ] === 4 ) {
+      grid[ p.y ][ p.x ] = 0;
+      game.score += 50;
+      // Activar modo miedo para todos los fantasmas
+      game.frightMode = true;
+      game.frightFrameCount = 0;
+      for ( const g of game.ghosts ) {
+        g.frightened = true;
+        g.eatenThisRound = false;
+      }
     }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
@@ -186,6 +202,25 @@ function decideScatter( game, g, choices ) {
   return best;
 }
 
+// Estrategia Flee: huye de Pacman (maximiza distancia)
+function decideFlee( game, g, choices ) {
+  const px = Math.round( game.pacman.x );
+  const py = Math.round( game.pacman.y );
+  let best = choices[ 0 ];
+  let bestDist = -Infinity;  // Maximizar distancia (opuesto a Hunter)
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - px ) + Math.abs( ny - py );
+    if ( dist > bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  return best;
+}
+
 // Estrategia para fantasmas dentro de la pen: perseguir la puerta de salida
 function decideGhostInPen( game, g, choices ) {
   const exitX = PEN_EXIT.x;
@@ -240,8 +275,11 @@ function decideGhost( game, g ) {
 
   let newDir;
   
+  // Si está asustado, usar estrategia de huida
+  if ( g.frightened ) {
+    newDir = decideFlee( game, g, choices );
   // Si el fantasma está en la pen, usar estrategia de escape
-  if ( g.inPen ) {
+  } else if ( g.inPen ) {
     newDir = decideGhostInPen( game, g, choices );
   } else {
     switch ( g.kind ) {
@@ -303,10 +341,15 @@ function resetPositions( game ) {
   p.y = PACMAN_START.y;
   p.dir = 'left';
   p.nextDir = null;
+  // Limpiar estado de miedo al reiniciar
+  game.frightMode = false;
+  game.frightFrameCount = 0;
   game.ghosts.forEach( ( g, i ) => {
     g.x = GHOST_STARTS[ i ].x;
     g.y = GHOST_STARTS[ i ].y;
     g.dir = 'up';
+    g.frightened = false;
+    g.eatenThisRound = false;
   } );
 }
 
@@ -320,13 +363,41 @@ function update( game ) {
 
   for ( const g of game.ghosts ) {
     if ( collides( game.pacman, g ) ) {
-      game.lives--;
-      if ( game.lives <= 0 ) {
-        game.state = 'lost';
-        return;
+      // Si el fantasma está asustado y no ha sido comido en esta ronda
+      if ( game.frightMode && g.frightened && !g.eatenThisRound ) {
+        g.eatenThisRound = true;
+        game.score += FRIGHT_POINTS;
+        // Enviar fantasma de vuelta a la pen
+        const ghostIndex = game.ghosts.indexOf( g );
+        if ( ghostIndex >= 0 ) {
+          g.x = GHOST_STARTS[ ghostIndex ].x;
+          g.y = GHOST_STARTS[ ghostIndex ].y;
+          g.inPen = true;
+          g.penFrameCount = 0;
+        }
+      } else if ( !game.frightMode || !g.frightened ) {
+        // Fantasma no asustado: Pacman pierde vida
+        game.lives--;
+        if ( game.lives <= 0 ) {
+          game.state = 'lost';
+          return;
+        }
+        resetPositions( game );
+        break;
       }
-      resetPositions( game );
-      break;
+    }
+  }
+
+  // Actualizar contador de miedo
+  if ( game.frightMode ) {
+    game.frightFrameCount++;
+    if ( game.frightFrameCount >= FRIGHT_DURATION ) {
+      game.frightMode = false;
+      game.frightFrameCount = 0;
+      for ( const g of game.ghosts ) {
+        g.frightened = false;
+        g.eatenThisRound = false;
+      }
     }
   }
 

@@ -79,6 +79,20 @@ function drawDots( ctx, grid ) {
   }
 }
 
+// Dibuja Power Pellets (píldoras de poder en esquinas)
+function drawPowerPellets( ctx, grid ) {
+  ctx.fillStyle = '#ff6fcf';  // Magenta/Rosa brillante
+  for ( let y = 0; y < grid.length; y++ ) {
+    for ( let x = 0; x < grid[ 0 ].length; x++ ) {
+      if ( grid[ y ][ x ] !== 4 ) continue;
+      const { cx, cy } = cellCenter( x, y );
+      ctx.beginPath();
+      ctx.arc( cx, cy, 6, 0, Math.PI * 2 );
+      ctx.fill();
+    }
+  }
+}
+
 function drawPacman( ctx, p, frame ) {
   const { cx, cy } = cellCenter( p.x, p.y );
   let rot = 0;
@@ -158,8 +172,13 @@ function draw( ctx, game, frame ) {
   drawWalls( ctx, grid );
   drawDoor( ctx, grid );
   drawDots( ctx, grid );
+  drawPowerPellets( ctx, grid );
   drawPacman( ctx, game.pacman, frame );
-  game.ghosts.forEach( ( g, i ) => drawGhost( ctx, g, GHOST_COLORS[ i ] || '#ff0000' ) );
+  game.ghosts.forEach( ( g, i ) => {
+    // Si el fantasma está asustado, dibujarlo en azul
+    const color = g.frightened ? '#0000ff' : ( GHOST_COLORS[ i ] || '#ff0000' );
+    drawGhost( ctx, g, color );
+  } );
   drawHUD( ctx, game, W );
 }
 

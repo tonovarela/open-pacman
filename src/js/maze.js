@@ -7,7 +7,7 @@
 
 const MAZE_STR = [
   '############################', // 0  borde
-  '#............##............#', // 1
+  '*...........##...........*#', // 1  esquinas arriba con power pellets
   '#.####.#####.##.#####.####.#', // 2
   '#.####.#####.##.#####.####.#', // 3
   '#.####.#####.##.#####.####.#', // 4
@@ -35,7 +35,7 @@ const MAZE_STR = [
   '#......##....##....##......#', // 26
   '#.##########.##.##########.#', // 27
   '#.##########.##.##########.#', // 28
-  '#..........................#', // 29
+  '*...........................*', // 29  esquinas abajo con power pellets
   '############################', // 30  borde
 ];
 
@@ -43,6 +43,7 @@ function parseTile( ch ) {
   if ( ch === '#' ) return 1;
   if ( ch === '.' ) return 2;
   if ( ch === '-' ) return 3;
+  if ( ch === '*' ) return 4;  // Power pellet (NUEVO)
   return 0; // espacio = vacio transitable
 }
 
@@ -89,6 +90,16 @@ const PEN_RELEASE_TIMES = [
   300   // Clyde (lento):     ~5 seg
 ];
 
+// Power Pellets — píldoras de poder en esquinas
+const POWER_PELLET_POSITIONS = [
+  { x: 1,  y: 1 },    // esquina arriba-izquierda
+  { x: 26, y: 1 },    // esquina arriba-derecha
+  { x: 26, y: 29 },   // esquina abajo-derecha
+  { x: 1,  y: 29 }    // esquina abajo-izquierda
+];
+const FRIGHT_DURATION = 300;  // ~5 segundos a 60fps
+const FRIGHT_POINTS = 200;    // Puntos al comer un fantasma asustado
+
 window.MAZE = MAZE;
 window.TUNNEL_ROW = TUNNEL_ROW;
 window.PACMAN_START = PACMAN_START;
@@ -98,3 +109,6 @@ window.SCATTER_CORNERS = SCATTER_CORNERS;
 window.PEN_BOUNDS = PEN_BOUNDS;
 window.PEN_EXIT = PEN_EXIT;
 window.PEN_RELEASE_TIMES = PEN_RELEASE_TIMES;
+window.POWER_PELLET_POSITIONS = POWER_PELLET_POSITIONS;
+window.FRIGHT_DURATION = FRIGHT_DURATION;
+window.FRIGHT_POINTS = FRIGHT_POINTS;

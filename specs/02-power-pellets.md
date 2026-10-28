@@ -1,6 +1,6 @@
 # SPEC 02 — Power Pellets en esquinas del mapa
 
-> **Status:** Aprobado
+> **Status:** Implementado
 > **Depends on:** SPEC 01 (fantasmas salen de la pen)
 > **Date:** 2026-10-27
 > **Objective:** Implementar Power Pellets (píldoras de poder) en las 4 esquinas del mapa que atemorizen a los fantasmas y permitan comerlos para obtener puntos bonus.

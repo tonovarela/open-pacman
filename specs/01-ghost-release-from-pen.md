@@ -1,6 +1,6 @@
 # SPEC 01 — Fantasmas salen de la jaula de partida
 
-> **Status:** Aprobado
+> **Status:** Implementado
 > **Depends on:** (ninguno)
 > **Date:** 2026-10-27
 > **Objective:** Implementar un sistema de salida diferida y controlada de los fantasmas desde la jaula de partida (pen), con tiempos personalizados por fantasma.
